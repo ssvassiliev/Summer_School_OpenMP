@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <omp.h>
 
 int main(int argc, char **argv) {
 	struct timespec ts_start, ts_end;
@@ -17,6 +18,7 @@ int main(int argc, char **argv) {
 	/* Get start time */
 	clock_gettime(CLOCK_MONOTONIC, &ts_start);
 
+#pragma omp parallel for	
 	for (i = 0; i<size; i++) {
 		c[i] = multiplier * a[i];
 	}
