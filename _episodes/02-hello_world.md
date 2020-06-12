@@ -36,7 +36,6 @@ How do we add in parallelism to the basic hello world program? The very first pr
 ~~~
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <omp.h>
 
 int main(int argc, char **argv) {
@@ -89,7 +88,7 @@ export OMP_NUM_THREADS=3
 > #SBATCH --time=0:01:0
 > #SBATCH --cpus-per-task=3
 > export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
-> ./hello_world
+> ./hello
 > ~~~
 > {: .bash}
 >
@@ -98,7 +97,15 @@ export OMP_NUM_THREADS=3
 > salloc --account=sponsor0 --cpus-per-task=3 --time=1:0:0
 > ~~~
 > {: .bash}
->
+> ~~~
+> [user30@login1 ~]$ salloc --account=sponsor0 --cpus-per-task=3 --time=1:0:0
+> salloc: Granted job allocation 54
+> salloc: Waiting for resource configuration
+> salloc: Nodes c14r56g1-node1 are ready for job
+> [user30@c14r56g1-node1 ~]$ nproc
+> 3
+> ~~~
+> {: .output}
 >  The most practical way to run our short parallel program is using *srun* command. Instead of submitting the job to the queue  *srun* will run the program from the interactive shell as soon as requested resources will become available. *Srun* understands the same keywords as *sbatch* and *salloc*.
 >
 > In SLURM environment operating system will see as many CPUs as you requested, so there is no need to set OMP_NUM_THREADS variable.
@@ -120,7 +127,6 @@ How can you tell which thread is doing what? The OpenMP specification includes a
 ~~~
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <omp.h>
 
 int main(int argc, char **argv) {

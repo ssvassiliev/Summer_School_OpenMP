@@ -13,22 +13,25 @@ keypoints:
 In this section, we will use the problem of numeric integration, i.e. calculating areas under curves, to look at how to control access to global variables. As our example, let's say we wanted to integrate the sine function from 0 to Pi. This is the same as the area under the first half of a sine curve. The single-threaded version is below.
 
 ~~~
+/* --- File integrate_sin.c --- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
 int main(int argc, char **argv) {
-   int steps = 1000;
-   double delta = M_PI/steps;
-   double total = 0.0;
-   int i;
-   for (i=0; i<steps; i++) {
-      total = total + sin(delta*i) * delta;
-   }
-   printf("The integral of sine from 0 to Pi is %.12f\n", total);
+	int steps = 1e7;
+	double delta = M_PI/steps;
+	double total = 0.0;
+	int i;
+
+	printf("Using %.0e steps\n", (float)steps);
+	for (i=0; i<steps; i++) {
+		total = total + sin(delta*i) * delta;
+	}
+	printf("The integral of sine from 0 to Pi is %.12f\n", total);
 }
 ~~~
-{: .source} 
+{: .source}
 
 > ## Compiling with math
 > In order to include the math functions, you need to link in the math library. In GCC, you would use the following:
@@ -46,7 +49,7 @@ The answer in this case should be 2. It will be off by a small amount because of
 >
 > > ## Solution
 > > You can decrease the step size by increasing the `steps` variable.
-> > We normally expect this to increase the accuracy of the result.  Does it? 
+> > We normally expect this to increase the accuracy of the result.  Does it?
 > > Is there a noticeable effect on the run time?
 > {: .solution}
 {: .challenge}
@@ -57,13 +60,13 @@ we just want to see the total time, we can use the program `time`.
 > ## Timing
 > You can use the time utility to get the amount of time it takes for a program to run.
 > ~~~
-> $ time ./pi-serial
-> Using 1000 steps
-> The integral of sine from 0 to Pi is 1.999998355066
-> 
-> real    0m0.005s
-> user    0m0.000s
-> sys     0m0.002s
+> [user30@login1 ~]$ time ./a.out
+> Using 1e+07 steps
+> The integral of sine from 0 to Pi is 2.000000000000
+>
+> real	0m0.407s
+> user	0m0.397s
+> sys	0m0.003s
 > ~~~
 > {: .bash}
 > The `real` output is the useful one; this example took 0.005 seconds to run.
@@ -85,27 +88,42 @@ handled by adding a critical section. A critical section only allows one thread
 at a time to run some code block.
 
 ~~~
+/* --- File integrate_sin_omp.c --- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 #include <omp.h>
 
 int main(int argc, char **argv) {
-   int steps = 1000;
-   float delta = M_PI/steps;
-   float total = 0.0;
-   int i;
-   #pragma omp parallel for
-   for (i=0; i<steps; i++) {
-      #pragma omp critical
-      total = total + sin(delta*i) * delta;
-   }
-   printf("The integral of sine from 0 to Pi is %f\n", total);
+	struct timespec ts_start, ts_end;
+	float time_total;
+	int steps = 1e7;
+	double delta = M_PI/steps;
+	double total = 0.0;
+	int i;
+
+	printf("Using %.0e steps\n", (float)steps);
+	/* Get start time */
+	clock_gettime(CLOCK_MONOTONIC, &ts_start);
+
+#pragma omp parallel for
+	for (i=0; i<steps; i++) {
+/* pragma omp critical */
+		total += sin(delta*i) * delta;
+	}
+	/* Get end time */
+	clock_gettime(CLOCK_MONOTONIC, &ts_end);
+
+	time_total = (ts_end.tv_sec - ts_start.tv_sec)*1e9 + \
+		     (ts_end.tv_nsec - ts_start.tv_nsec);
+	printf("Total time is %f ms\n", time_total/1e6);
+	printf("The integral of sine from 0 to Pi is %.12f\n", total);
 }
 ~~~
 {: .source}
 
-The `critical` pragma is a very general construct that lets you ensure a code
-line is executed exclusively.  However, making a sum is a very common operation
-in computing so OpenMP provides a specific mechanism to handle this case:
-*Reduction variables*. We'll look at those in the next section.
+The `critical` directive is a very general construct that lets you ensure a code line is executed exclusively by one thread. In this particular case using `critical` directive is a very bad decision. We have only one line of code, so all threads except one are waiting. This is reflected in degraded performance compared even to serial version.
+
+Computing a sum is a very common operation
+in so OpenMP provides a specific mechanism to handle this case: *Reduction variables*. We'll look at those in the next section.

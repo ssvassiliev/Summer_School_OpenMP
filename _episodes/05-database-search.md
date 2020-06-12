@@ -49,14 +49,14 @@ Using this as a starting point, we could use this code to have each available th
 
 There are times when you may need to drop out of a parallel section in order to have a single one of the threads executing some code.
 
-- The **#pragma omp single** directive allows us to do this.
+- The ``#pragma omp single` directive allows us to do this.
 
-A code block associated with the **single** directive will be executed by only the first thread to see it.
+A code block associated with the `single` directive will be executed by only the first thread to see it.
 
 More information: [**single Construct**](https://www.openmp.org/spec-html/5.0/openmpsu38.html)
 
 > ## Which thread runs first?
-> Modify the following code to find out which thread gets to run first in the parallel section.
+> Modify the following code to print out only the thread that gets to run first in the parallel section.
 > You should be able to do it by adding only one line.
 > Here's a (rather dense) reference guide in which you can look for ideas:
 > [Directives and Constructs for C/C++](https://www.openmp.org/wp-content/uploads/OpenMP-4.5-1115-CPP-web.pdf).
@@ -106,6 +106,7 @@ More information: [**single Construct**](https://www.openmp.org/spec-html/5.0/op
 Let's say that we need to search through an array to find the largest value. How could we do this type of search in parallel? Let's begin with the serial version.
 
 ~~~
+/* --- File array_max.c --- */
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -115,7 +116,7 @@ int main(int argc, char **argv) {
    int i;
    float curr_max;
 
-   // Initialize with random values
+   /* Initialize with random values
    for (i=0; i<size; i++) {
       rand_nums[i] = rand();
    }
@@ -142,31 +143,47 @@ The first stab would be to make the for loop a parallel for loop. You would want
 > 2. To know about *reduction variables*.
 >
 > A reduction variable is used to accumulate some value over parallel threads, like a sum, a global maximum, a global minimum, etc.
-> The reduction operators that you can use are: +, *, -, &, |, ^, &&, ||, max, min.
+> The reduction operators that you can use are:
+ +, *, -, &, |, ^, &&, ||, max, min.
 >
 > ~~~
+> /* --- File array_max_omp.c --- */
 > #include <stdio.h>
 > #include <stdlib.h>
+> #include <time.h>
 >
 > int main(int argc, char **argv) {
->    int size = 10000;
->    float rand_nums[size];
->    int i;
->    float curr_max;
+>	struct timespec ts_start, ts_end;
+>	float time_total;
+>	int size = 1e7;
+>	int *rand_nums;
+>	int i;
+>	int curr_max;
+>	time_t t;
 >
->   // Initialize with random values
->    for (i=0; i<size; i++) {
->       rand_nums[i] = rand();
->    }
+>	rand_nums=malloc(size*sizeof(int));
+>	/* Intialize random number generator */
+>	srand((unsigned) time(&t));
+>	/* Initialize array with random values */
+>	for (i=0; i<size; i++)
+>		rand_nums[i] = rand();
 >
->    curr_max = 0.0;
->    #pragma omp parallel for reduction(max:curr_max)
->    for (i=0; i<size; i++) {
->       if (curr_max < rand_nums[i]) {
->          curr_max = rand_nums[i];
->       }
->    }
->    printf("Max value is %f\n", curr_max);
+>	curr_max = 0.0;
+>	/* Get start time */
+>	clock_gettime(CLOCK_MONOTONIC, &ts_start);
+>
+> #pragma omp parallel for reduction(max:curr_max)
+>	for (i=0; i<size; i++) 
+>		if (curr_max < rand_nums[i]) {
+>			curr_max = rand_nums[i];
+>		}
+>
+>	/* Get end time */
+>	clock_gettime(CLOCK_MONOTONIC, &ts_end);
+>	time_total = (ts_end.tv_sec - ts_start.tv_sec)*1e9 + \
+>		     (ts_end.tv_nsec - ts_start.tv_nsec);
+>	printf("Total time is %f ms\n", time_total/1e6);
+>	printf("Max value is %d\n", curr_max);
 > }
 > ~~~
 > {: .source}

@@ -21,6 +21,7 @@ One of the classic applications of programming is linear algebra, in all of its 
 The simplest problem is applying some function to an array of numbers. An example is multiplying each value by some constant number. In serial you would use a for loop (in C; a DO loop in Fortran) to do this multiplication for each element, like this:
 
 ~~~
+/* --- File array_multiply.c --- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -52,7 +53,6 @@ int main(int argc, char **argv) {
 }
 ~~~
 {: .source}
-File: array_mltiply.c
 
 We added calls to *clock_gettime( )* from the *time.h* header file to get the start and end times of the heavy work being done by the for loop. In this case, we get a count of how many seconds and how many nanoseconds elapsed, given in two parts of the time structure. We did some math to get the elapsed time in milliseconds.
 
@@ -66,6 +66,7 @@ Not complicated at all:  We add two lines, `#include <omp.h>` near the top,
 and  `#pragma omp parallel for` just before the `for (...)` statement:
 
 ~~~
+/* --- File array_multiply_omp.c --- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -123,6 +124,7 @@ Now let's try adding up the elements of a matrix.
 Moving up to two dimensions adds a new layer of looping. The basic code looks like the following.
 
 ~~~
+/* --- File matrix_multiply_omp.c --- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>

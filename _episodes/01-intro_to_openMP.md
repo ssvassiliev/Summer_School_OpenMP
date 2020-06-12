@@ -87,5 +87,6 @@ For an overview of the past, present and future of the OpenMP read the paper ["T
   - When the team threads complete the statements in the parallel region construct, they synchronize and terminate, leaving only the master thread. We call this “joining”.
 
 - OpenMP divides the memory into two types: Global (or shared) memory, and thread-local memory. Every thread can read and write the global memory, but each thread also gets a little slice of memory that can only be read or written by that thread.
+![](../fig/OpenMP-execution-model.svg)
 
 {% include links.md %}
