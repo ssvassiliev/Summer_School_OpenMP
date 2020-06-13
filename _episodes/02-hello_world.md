@@ -187,4 +187,78 @@ Here, you will get each thread tagging their output with their unique ID, a numb
 > {: .solution}
 {: .challenge}
 
+
+### Work-Sharing Constructs
+
+A work-sharing construct divides the execution of the enclosed code region among the members of the thread team that encounter it.
+
+- Work-sharing constructs do not launch new threads
+- There is no implied barrier upon entry to a work-sharing construct.
+-  There is an implied barrier at the end of a work sharing construct.
+
+
+#### *For*
+- ***For*** construct shares iterations of a loop across the team of threads.
+- Each thread executes the same instructions. This assumes a parallel region has already been initiated, otherwise it executes in serial on a single processor.
+- *For* represents a type of *data parallelism*.
+
+~~~
+...
+#pragma omp parallel for
+    for (i=0; i < N; i++)
+        c[i] = a[i] + b[i];
+...
+~~~
+{: .source}
+
+> ## Stack Overflow
+> If you declare large arrays like this:
+> ~~~
+>  A[1000][1000];
+> ~~~
+> Your program may emit "Segmentation fault" message and crash. These arrays are allocated on stack and stack on our cluster is very limited (8MB).
+{: .callout}
+
+#### *Sections*
+- ***Sections*** construct breaks work into separate, discrete sections.
+- It is is a non-iterative work-sharing construct.
+- It specifies that the enclosed section(s) of code are to be divided among the threads in the team. Independent *section* directives are nested within a *sections* directive. Each *section* contains different instructions and is executed once by a thread.
+- It is possible for a thread to execute more than one *section*.
+- *Sections* can be used to implement a *functional parallelism*.
+
+~~~
+#pragma omp parallel shared(a,b,c,d) private(i)
+  {
+  #pragma omp sections nowait
+    {
+
+    #pragma omp section
+    for (i=0; i < N; i++)
+      c[i] = a[i] + b[i];
+
+    #pragma omp section
+    for (i=0; i < N; i++)
+      d[i] = a[i] * b[i];
+
+    }  /* end of sections */
+  }  /* end of parallel region */
+~~~
+{: .source}
+
+Here *nowait* directive means that the second section can start before the first one is finished.
+
+> ## Questions
+> What happens if the number of threads and the number of *sections* are different? More threads than *sections*? Less threads than sections?
+>
+> > ## Solution
+> > If there are more threads than sections, only some threads will execute a section.  If there are more sections than threads, the implementation defines how the extra sections are executed.
+> {: .solution}
+{: .challenge}
+
+#### *Single*
+- The *single* directive specifies that the enclosed code is to be executed by only one thread in the team.
+- May be useful when dealing with sections of code that are not thread safe (such as I/O).
+
+
+
 {% include links.md %}
