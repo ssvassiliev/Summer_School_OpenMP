@@ -247,8 +247,11 @@ A work-sharing construct divides the execution of the enclosed code region among
 
 Here *nowait* directive means that the second section can start before the first one is finished.
 
-> ## Questions
-> What happens if the number of threads and the number of *sections* are different? More threads than *sections*? Less threads than sections?
+> ## Exercise
+> Compile *sections.c* and run it on a different number of CPUs. This example has two sections and the program prints out which threads are doing them.
+> - What happens if the number of threads and the number of *sections* are different?
+> - More threads than *sections*?
+> - Less threads than sections?
 >
 > > ## Solution
 > > If there are more threads than sections, only some threads will execute a section.  If there are more sections than threads, the implementation defines how the extra sections are executed.
@@ -258,7 +261,5 @@ Here *nowait* directive means that the second section can start before the first
 #### *Single*
 - The *single* directive specifies that the enclosed code is to be executed by only one thread in the team.
 - May be useful when dealing with sections of code that are not thread safe (such as I/O).
-
-
 
 {% include links.md %}
