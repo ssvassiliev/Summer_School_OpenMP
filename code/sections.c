@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #define N     5000
 
-int main (int argc, char *argv[]) 
+int main (int argc, char *argv[])
 {
     int i, th;
     float a[N], b[N], c[N], d[N];
@@ -26,12 +26,14 @@ int main (int argc, char *argv[])
 		printf("Thread %d doing section 1\n",th);
 		for (i=0; i<N; i++)
 		    c[i] = a[i] + b[i];
+		printf("Thread %d done\n",th);
 	    }
 #pragma omp section
 	    {
 		printf("Thread %d doing section 2\n",th);
 		for (i=0; i<N; i++)
 		    d[i] = a[i] * b[i];
+    printf("Thread %d done\n",th);        
 	    }
 	}  /* end of sections */
     }  /* end of parallel section */

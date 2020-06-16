@@ -20,18 +20,19 @@ Since OpenMP is an extension to the compiler, you need to be able to tell the co
 
 C/C++
 ~~~
-#pragma omp ...
+#pragma omp < OpenMP directive >
 ~~~
 {: .source}
 
 FORTRAN
 ~~~
-!$OMP ...
+!$OMP < OpenMP directive >
 ~~~
 {: .source}
 
+In C all OpenMP - specific directives start with `#pragma omp`.
 
-How do we add in parallelism to the basic hello world program? The very first pragma that we will look at is the `parallel` pragma.
+How do we add in parallelism to the basic hello world program? The very first directive that we will look at is the `parallel` directive. The `parallel` directive forks threads to carry out the work given in the `parallel` block of code.
 
 ~~~
 #include <stdio.h>
@@ -40,7 +41,7 @@ How do we add in parallelism to the basic hello world program? The very first pr
 
 int main(int argc, char **argv) {
 
-   #pragma omp parallel
+#pragma omp parallel
    printf("Hello World\n");
 }
 ~~~
@@ -65,7 +66,7 @@ icc -qopenmp -o hello hello.c
 When you run this program, you should see the output "Hello World" multiple
 times. But how many?
 
-The standard says this is implementation dependent. But the usual default is, OpenMP will look at the machine that it is running on and see how many cores there are. It will then launch a thread for each core.
+The OpenMP standard says this is implementation dependent. But the usual default is that OpenMP will look at the machine it is running on and see how many cores there are. It will then launch a thread for each core.
 
 You can control the number of threads with environment variable OMP_NUM_THREADS. For example, if you want only 3 threads, do the following:
 
@@ -76,7 +77,7 @@ export OMP_NUM_THREADS=3
 {: .bash}
 
 > ## Using multiple cores
-> Try running the hello world program with different numbers of threads.
+> Try running the "hello" program with different numbers of threads.
 > - Can you use more threads than the cores on the machine?
 > You can use *nproc* command to find out how many cores are on the machine.
 {: .challenge}
@@ -106,9 +107,9 @@ export OMP_NUM_THREADS=3
 > 3
 > ~~~
 > {: .output}
->  The most practical way to run our short parallel program is using *srun* command. Instead of submitting the job to the queue  *srun* will run the program from the interactive shell as soon as requested resources will become available. *Srun* understands the same keywords as *sbatch* and *salloc*.
+>  The most practical way to run our short parallel program on our test cluster is using *srun* command. Instead of submitting the job to the queue  *srun* will run the program from the interactive shell as soon as requested resources will become available. After the job is finished slurm will release the allocated resources and exit. *Srun* understands the same keywords as *sbatch* and *salloc*.
 >
-> In SLURM environment operating system will see as many CPUs as you requested, so there is no need to set OMP_NUM_THREADS variable.
+> In SLURM environment operating system will see as many CPUs as you requested, so there is no need to set OMP_NUM_THREADS variable to $SLURM_CPUS_PER_TASK.
 >
 > ~~~
 > srun --cpus-per-task=4 hello
@@ -118,13 +119,23 @@ export OMP_NUM_THREADS=3
 > {: .bash}
 {: .callout}
 
-
-
 ## Identifying threads
 
-How can you tell which thread is doing what? The OpenMP specification includes a number of functions that are made available through the included header file "omp.h". One of them is the function "omp_get_thread_num()", to get an ID of the thread running the code.
+> ## Download and Unpack the Code.
+> If you have not yet done so, download and unpack the code:
+> ~~~
+> cd Desktop
+> wget
+> tar -xf
+> cd code
+> ~~~
+> {: .source}
+{: .callout}
+
+How can you tell which thread is doing what? The OpenMP specification includes a number of functions that are made available through the included header file "omp.h". One of them is the function "omp_get_thread_num( )", used to get an ID of the thread running the code.
 
 ~~~
+/* --- File hello_world_omp.c --- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
@@ -132,7 +143,7 @@ How can you tell which thread is doing what? The OpenMP specification includes a
 int main(int argc, char **argv) {
    int id;
 
-   #pragma omp parallel
+#pragma omp parallel
    {
      id = omp_get_thread_num();
      printf("Hello World from thread %d\n", id);
@@ -141,12 +152,12 @@ int main(int argc, char **argv) {
 ~~~
 {: .source}
 
-Here, you will get each thread tagging their output with their unique ID, a number between 0 and NUM_THREADS-1.
+Here, you will get each thread tagging their output with their unique ID, a number between 0 and (number of threads - 1).
 
-> ## Pragmas and code blocks
-> An OpenMP pragma applies to the following *code block* in C or C++.
-> Code blocks are either a single line, or a series of lines wrapped by curly brackets.
-> Because Fortran doesn't have an analogous construction, many OpenMP pragmas in Fortran are paired with an "end" pragma, such as `!$omp parallel end`.
+> ## Pragmas and code blocks in FORTRAN
+> An OpenMP directive applies to the *code block* following it in C or C++. Code blocks are either a single line, or a series of lines wrapped by curly brackets.
+>
+> Because Fortran doesn't have an analogous construction, many OpenMP directives in Fortran are paired with the matching "end" directive, such as `!$omp parallel end`.
 {: .callout}
 
 > ## Thread ordering
@@ -159,12 +170,12 @@ Here, you will get each thread tagging their output with their unique ID, a numb
 > {: .solution}
 {: .challenge}
 
-> ## Conditional compilation
+> ## Conditional Compilation
 > We said earlier that you should be able to use the same code for both OpenMP and serial work. Try compiling the code without the -fopenmp flag.
 > - What happens?
 > - Can you figure out how to fix it?
 >
-> Hint: The compiler defines preprocessor variable \_OPENMP, so you could use #ifdef ... #endif preprocessor directives
+> Hint: The compiler defines preprocessor macro \_OPENMP, so you could use #ifdef ... #endif preprocessor directives
 > > ## Solution
 > > ~~~
 > >
@@ -193,12 +204,10 @@ Here, you will get each thread tagging their output with their unique ID, a numb
 A work-sharing construct divides the execution of the enclosed code region among the members of the thread team that encounter it.
 
 - Work-sharing constructs do not launch new threads
-- There is no implied barrier upon entry to a work-sharing construct.
--  There is an implied barrier at the end of a work sharing construct.
-
+- A program will wait for all threads to finish at the end of a work sharing construct. This behaviour is called "implied barrier".
 
 #### *For*
-- ***For*** construct shares iterations of a loop across the team of threads.
+- ***For*** construct divides iterations of a loop across the team of threads.
 - Each thread executes the same instructions. This assumes a parallel region has already been initiated, otherwise it executes in serial on a single processor.
 - *For* represents a type of *data parallelism*.
 
@@ -229,14 +238,14 @@ A work-sharing construct divides the execution of the enclosed code region among
 ~~~
 #pragma omp parallel shared(a,b,c,d) private(i)
   {
-  #pragma omp sections nowait
+#pragma omp sections nowait
     {
 
-    #pragma omp section
+#pragma omp section
     for (i=0; i < N; i++)
       c[i] = a[i] + b[i];
 
-    #pragma omp section
+#pragma omp section
     for (i=0; i < N; i++)
       d[i] = a[i] * b[i];
 
@@ -245,10 +254,10 @@ A work-sharing construct divides the execution of the enclosed code region among
 ~~~
 {: .source}
 
-Here *nowait* directive means that the second section can start before the first one is finished.
+Here *nowait* keyword (clause) means that the program will not wait at the end of `sections` block for all threads to finish.
 
 > ## Exercise
-> Compile *sections.c* and run it on a different number of CPUs. This example has two sections and the program prints out which threads are doing them.
+> Compile the file *sections.c* and run it on a different number of CPUs. This example has two sections and the program prints out which threads are doing them.
 > - What happens if the number of threads and the number of *sections* are different?
 > - More threads than *sections*?
 > - Less threads than sections?

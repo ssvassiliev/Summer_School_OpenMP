@@ -54,6 +54,13 @@ int main(int argc, char **argv) {
 ~~~
 {: .source}
 
+> ## Compiling and running
+> Compiling: `gcc array_multiply.c -o array_multiply`
+>
+> Running with 4 threads:
+> `srun --mem-per-cpu=4000 array_multiply`
+{: .callout}
+
 We added calls to *clock_gettime( )* from the *time.h* header file to get the start and end times of the heavy work being done by the for loop. In this case, we get a count of how many seconds and how many nanoseconds elapsed, given in two parts of the time structure. We did some math to get the elapsed time in milliseconds.
 
 > ## Time and Size

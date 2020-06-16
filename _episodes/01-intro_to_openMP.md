@@ -77,7 +77,7 @@ Since OpenMP is meant to be used with either C/C++ or FORTRAN, you will need to 
 > Hello World
 > ~~~
 > {: .output}
-> If you don't specify the output filename with the -o option compiler will use the default output name "a.out" (assembler output).  
+> If you don't specify the output filename with the -o option compiler will use the default output name "a.out" (assembler output).
 {: .callout}
 
 > ## GCC on Compute Canada
@@ -93,25 +93,34 @@ Since OpenMP is meant to be used with either C/C++ or FORTRAN, you will need to 
 {: .callout}
 
 ### A Very Quick Introduction to C
+- Preprocessor directives
+  - The `#include` directive tells the preprocessor to insert the contents of another file into the source code.
+  - Include directives are typically used to include the C header files for C functions that are defined outsite of the current source file:
 
-- The `#include` directive tells the preprocessor to insert the contents of another file into the source code.
-- Include directives are typically used to include the C header files for C functions that are defined outsite of the current source file:
+    ~~~
+    #include <header_file> // Search in a predefined folders
+    #include "header_file>" // Search in the current directory
+    ~~~
+    {: .source}
 
-  ~~~
-  #include <header_file> // Search in a predefined folders
-  #include "header_file>" // Search in the current directory
-  ~~~
-  {: .source}
+  - Header files contain declarations of functions, variables and macros.
 
-- Header files contain declarations of functions, variables and macros.
+  - The `#define` directive declares constant values to be used throughout your code. For example it is a convenient way to change some parameters used throughout the code:
+       ~~~
+       # define SIZE 1000
+       ~~~
+       {: .source}
 
-- The `#define` directive declares constant values to be used throughout your code. For example it is a convenient way to change some parameters used throughout the code:
-     ~~~
-     # define SIZE 1000
-     ~~~
-     {: .source}
+  - The *conditional group* `#ifdef`.
 
+      ~~~
+      #ifdef MACRO
+      controlled code
+      #endif /* MACRO */
+      ~~~
+      {: .source}
 
+  - The block inside `#ifdef ... #endif` statements  is called a conditional group. Controlled code will be included in the output of the preprocessor only if MACRO (a block of C statements) is defined.
 
 - Curly braces `{ ...  }` are used to group statements into a block of statements.
 

@@ -36,8 +36,7 @@ int main(int argc, char **argv) {
 > ## Compiling with math
 > In order to include the math functions, you need to link in the math library. In GCC, you would use the following:
 > ~~~
-> gcc -o pi-serial pi.c -lm
-> ./pi
+> [user30@login1 ~]$ gcc -o integrate integrate_sin_omp.c -lm
 > ~~~
 > {: .bash}
 {: .callout}
@@ -60,13 +59,13 @@ we just want to see the total time, we can use the program `time`.
 > ## Timing
 > You can use the time utility to get the amount of time it takes for a program to run.
 > ~~~
-> [user30@login1 ~]$ time ./a.out
+> [user30@login1 ~]$ time -p ./integrate
 > Using 1e+07 steps
+> Total time is 403.428512 ms
 > The integral of sine from 0 to Pi is 2.000000000000
->
-> real	0m0.407s
-> user	0m0.397s
-> sys	0m0.003s
+> real 0.41
+> user 0.40
+> sys 0.00
 > ~~~
 > {: .bash}
 > The `real` output is the useful one; this example took 0.005 seconds to run.
@@ -123,7 +122,17 @@ int main(int argc, char **argv) {
 ~~~
 {: .source}
 
-The `critical` directive is a very general construct that lets you ensure a code line is executed exclusively by one thread. In this particular case using `critical` directive is a very bad decision. We have only one line of code, so all threads except one are waiting. This is reflected in degraded performance compared even to serial version.
+The `critical` directive is a very general construct that lets you ensure a code line is executed exclusively by one thread.
+
+> ## Parallel Performance
+> - Compile the program integrate_sin_omp.c and run it on more that one thread. Did you get the correct result?
+> - Insert `critical` directive, recompile the code and run it on more that one thread. Try different number of threads. Did you get the corect result now?
+> - How execution time with one thread compares to 2 and more threads?
+>
+> > ## Solution
+> > In this particular case using `critical` directive is not a good decision. We have only one line of code, so all threads except one are waiting. This is reflected in a degraded parallel performance compared even to serial version.
+>  {: .solution}
+{: .challenge}
 
 Computing a sum is a very common operation
-in so OpenMP provides a specific mechanism to handle this case: *Reduction variables*. We'll look at those in the next section.
+in so OpenMP provides a specific mechanism to handle this case: *Reduction clause*. Reduction clause lets you specify one or more thread-private variables that are subject to a reduction operation at the end of the parallel region. We'll look at it in the next section.
