@@ -99,7 +99,7 @@ Since OpenMP is meant to be used with either C/C++ or FORTRAN, you will need to 
 
     ~~~
     #include <header_file> // Search in a predefined folders
-    #include "header_file>" // Search in the current directory
+    #include "header_file" // Search in the current directory
     ~~~
     {: .source}
 
