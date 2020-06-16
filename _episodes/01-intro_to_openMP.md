@@ -41,7 +41,7 @@ For an overview of the past, present and future of the OpenMP read the paper ["T
 
 - OpenMP uses the so-called fork-join model of parallel execution:
   - OpenMP programs start as a single process, the master thread. The master thread executes sequentially. When the first parallel region is encountered. The master thread creates a team of parallel threads.We call this “forking”.
-  - The statements in the parallel region of the program that are executed in parallel by various team threads.
+  - The statements in the parallel region of the program are executed in parallel by various team threads.
   - When the team threads complete the statements in the parallel region construct, they synchronize and terminate, leaving only the master thread. We call this “joining”.
 
 - OpenMP divides the memory into two types: Global (or shared) memory, and thread-local memory. Every thread can read and write the global memory, but each thread also gets a little slice of memory that can only be read or written by that thread.

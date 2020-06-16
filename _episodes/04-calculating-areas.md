@@ -147,4 +147,5 @@ The OpenMP reduction clause lets you specify thread-private variables that are s
 >  {: .solution}
 {: .challenge}
 
+
 We'll look at other uses of reduction variables in the next section.
