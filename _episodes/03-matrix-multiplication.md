@@ -63,6 +63,11 @@ int main(int argc, char **argv) {
 
 We added calls to *clock_gettime( )* from the *time.h* header file to get the start and end times of the heavy work being done by the for loop. In this case, we get a count of how many seconds and how many nanoseconds elapsed, given in two parts of the time structure. We did some math to get the elapsed time in milliseconds.
 
+Try to run the program several times and record execution time. What happens to the run time of your program through multiple runs?
+
+Then change the size of the array, recompile and rerun the program. Did execution time changed?
+
+
 > ## Time and Size
 > What happens to the run time of your program through multiple runs?
 > What happens if you change the size and recompile and rerun?
@@ -115,6 +120,7 @@ int main(int argc, char **argv) {
 > `srun -c4 --mem-per-cpu=1000 array_multiply_omp`
 {: .callout}
 
+Run the program with different number of threads and observe how the runtime changes.
 
 > ## Using more threads
 > How many threads did you use?
@@ -253,6 +259,7 @@ There's a wikipedia page on data depencies: <https://en.wikipedia.org/wiki/Data_
 > /* loop #1 */
 > for ( i=2; i<N; i=i+2 ) {
 >     a[i] = a[i] + a[i-1]; }
+> Increment of this loop is 2, so a[2]=a[2]+a[1]. In the next iterration we compute a[4]=a[4]+a[3] ... etc.
 >
 > /* loop #2 */
 > for ( i=1; i<N/2; i=i+1 ) {

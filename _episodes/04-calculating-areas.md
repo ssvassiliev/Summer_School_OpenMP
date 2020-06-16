@@ -134,5 +134,17 @@ The `critical` directive is a very general construct that lets you ensure a code
 >  {: .solution}
 {: .challenge}
 
-Computing a sum is a very common operation
-in so OpenMP provides a specific mechanism to handle this case: *Reduction clause*. Reduction clause lets you specify one or more thread-private variables that are subject to a reduction operation at the end of the parallel region. We'll look at it in the next section.
+Computing a sum is a very common operation and OpenMP provides a specific thread-safe mechanism to compute a sum: *Reduction clause*.
+The OpenMP reduction clause lets you specify thread-private variables that are subject to a reduction operation at the end of the parallel region.
+
+> ## Reduction Clause
+> - Delele the `critical` directive and add reduction clause to the parallel `for` loop.  Recompile the code and execute. Try different number of threads. Did you get the corect result now?
+> - How does the program scale now?
+> Hint: specify the variable `total` as a reduction variable: `reduction(+:total)`
+>
+> > ## Solution
+> > `#pragma omp parallel for reduction(+:total)`
+>  {: .solution}
+{: .challenge}
+
+We'll look at other uses of reduction variables in the next section.
