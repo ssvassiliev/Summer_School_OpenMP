@@ -78,13 +78,9 @@ How would you parallelize this code to get it to run faster?
 
 Obviously, we could add `#pragma parallel for`. But do we make `total` private, or not?
 
-The data dependency on `total` leads to what we call a _race condition_. Since we are
-updating a global variable, there is a race between the various threads as to
-who can read and then write the value of `total`. Multiple threads could read
-the current value, before a working thread can write the result of its addition. So these
-reading threads essentially miss out on some additions to the total. This can be
-handled by adding a critical section. A critical section only allows one thread
-at a time to run some code block.
+The data dependency on `total` leads to what we call a _race condition_. Since we are updating a global variable, there is a race between the various threads as to who can read and then write the value of `total`. Multiple threads could read
+the current value, before a working thread can write the result of its addition. So these reading threads essentially miss out on some additions to the total. This can be
+handled by adding a critical section. A critical section only allows one thread at a time to run some code block.
 
 ~~~
 /* --- File integrate_sin_omp.c --- */
@@ -133,6 +129,20 @@ The `critical` directive is a very general construct that lets you ensure a code
 > > In this particular case using `critical` directive is not a good decision. We have only one line of code, so all threads except one are waiting. This is reflected in a degraded parallel performance compared even to serial version.
 >  {: .solution}
 {: .challenge}
+
+Doing numerical integration we encountered race condition when multiple threads were updating the same global variable total.(Race condition). To avoid race condition we used 'critical' directive to allow only one thread to execute critical section.
+
+If you have done benchmarking you would see that this control mechanism degraded performance. Parallel version was actually running slower than serial.  
+
+### Another way to avoid race conditions
+The *omp atomic* directive allows access to a specific variable avoiding race condition by controlling concurrent threads that might access the specific memory location directly. This allows to write more efficient code with less locks.
+
+~~~
+#pragma omp atomic
+x[i] += y
+~~~
+
+Atomic clauses: update (defaults), write, read, capture
 
 Computing a sum is a very common operation and OpenMP provides a specific thread-safe mechanism to compute a sum: *Reduction clause*.
 The OpenMP reduction clause lets you specify thread-private variables that are subject to a reduction operation at the end of the parallel region.
