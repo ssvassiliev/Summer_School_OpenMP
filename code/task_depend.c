@@ -28,12 +28,11 @@ int main(int argc, char **argv) {
       x[i][j]=i+j;
   printf("\n");
 
-#pragma omp parallel
-
-  /* Add parallel code */
-
-  /* Print parallel result */
   printf("Parallel result:\n");
+
+#pragma omp parallel
+ /* Generate parallel tasks */
+
   for(i=1;i<N;i++){
     for(j=1;j<N;j++){
       x[i][j] = x[i-1][j] + x[i][j-1];
