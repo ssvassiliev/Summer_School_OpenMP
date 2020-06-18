@@ -134,57 +134,56 @@ int main(int argc, char **argv) {
 
 The first stab would be to make the for loop a parallel for loop. You would want to make sure that each thread had a private copy of the *curr_max* variable, since it will be written to. But, how do you find out which thread has the largest value?
 
+## Reduction Operators
 
-> ## Reduction Operators
-> You could create an array of `curr_maxes`, but getting that to work right would be messy. How do you adapt to different NUM_THREADS?
->
-> The keys here are
-> 1. To recognize the analogy with the problem of `total` from the last episode, and
-> 2. To know about *reduction variables*.
->
-> A reduction variable is used to accumulate some value over parallel threads, like a sum, a global maximum, a global minimum, etc.
-> The reduction operators that you can use are:
+You could create an array of `curr_maxes`, but getting that to work right would be messy. How do you adapt to different NUM_THREADS?
+
+ The keys here are
+ 1. To recognize the analogy with the problem of `total` from the last episode, and
+ 2. To know about *reduction variables*.
+
+ A reduction variable is used to accumulate some value over parallel threads, like a sum, a global maximum, a global minimum, etc.
+ The reduction operators that you can use are:
  +, *, -, &, |, ^, &&, ||, max, min.
->
-> ~~~
-> /* --- File array_max_omp.c --- */
-> #include <stdio.h>
-> #include <stdlib.h>
-> #include <time.h>
->
-> int main(int argc, char **argv) {
->	struct timespec ts_start, ts_end;
->	float time_total;
->	int size = 1e7;
->	int *rand_nums;
->	int i;
->	int curr_max;
->	time_t t;
->
->	rand_nums=malloc(size*sizeof(int));
->	/* Intialize random number generator */
->	srand((unsigned) time(&t));
->	/* Initialize array with random values */
->	for (i=0; i<size; i++)
->		rand_nums[i] = rand();
->
->	curr_max = 0.0;
->	/* Get start time */
->	clock_gettime(CLOCK_MONOTONIC, &ts_start);
->
-> #pragma omp parallel for reduction(max:curr_max)
->	for (i=0; i<size; i++) 
->		if (curr_max < rand_nums[i]) {
->			curr_max = rand_nums[i];
->		}
->
->	/* Get end time */
->	clock_gettime(CLOCK_MONOTONIC, &ts_end);
->	time_total = (ts_end.tv_sec - ts_start.tv_sec)*1e9 + \
->		     (ts_end.tv_nsec - ts_start.tv_nsec);
->	printf("Total time is %f ms\n", time_total/1e6);
->	printf("Max value is %d\n", curr_max);
-> }
-> ~~~
-> {: .source}
-{: .solution}
+
+ ~~~
+ /* --- File array_max_omp.c --- */
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <time.h>
+
+ int main(int argc, char **argv) {
+	struct timespec ts_start, ts_end;
+	float time_total;
+	int size = 1e7;
+	int *rand_nums;
+	int i;
+	int curr_max;
+	time_t t;
+
+	rand_nums=malloc(size*sizeof(int));
+	/* Intialize random number generator */
+	srand((unsigned) time(&t));
+	/* Initialize array with random values */
+	for (i=0; i<size; i++)
+		rand_nums[i] = rand();
+
+	curr_max = 0.0;
+	/* Get start time */
+	clock_gettime(CLOCK_MONOTONIC, &ts_start);
+
+ #pragma omp parallel for reduction(max:curr_max)
+	for (i=0; i<size; i++)
+		if (curr_max < rand_nums[i]) {
+			curr_max = rand_nums[i];
+		}
+
+	/* Get end time */
+	clock_gettime(CLOCK_MONOTONIC, &ts_end);
+	time_total = (ts_end.tv_sec - ts_start.tv_sec)*1e9 + \
+		     (ts_end.tv_nsec - ts_start.tv_nsec);
+	printf("Total time is %f ms\n", time_total/1e6);
+	printf("Max value is %d\n", curr_max);
+ }
+ ~~~
+ {: .source}
