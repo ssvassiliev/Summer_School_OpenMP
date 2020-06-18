@@ -1,7 +1,7 @@
 ---
 title: "Calculating Electrostatic Energy"
 teaching: 20
-exercises: 100
+exercises: 10
 questions:
 - "How do we handle irregular tasks?"
 objectives:

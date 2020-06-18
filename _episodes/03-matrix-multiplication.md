@@ -1,7 +1,7 @@
 ---
 title: "Parallel Operations with Arrays"
 teaching: 20
-exercises: 30
+exercises: 20
 questions:
 - "How do I parallelize a loop?"
 objectives:

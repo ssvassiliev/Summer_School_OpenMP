@@ -1,7 +1,7 @@
 ---
 title: "Drawing the Mandelbrot set"
 teaching: 20
-exercises: 100
+exercises: 10
 questions:
 - "How do we handle irregular tasks?"
 objectives:

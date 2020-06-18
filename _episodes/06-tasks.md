@@ -1,6 +1,6 @@
 ---
 title: "Tasks"
-teaching: 10
+teaching: 20
 exercises: 5
 questions:
 - "How to recurse in parallel"
