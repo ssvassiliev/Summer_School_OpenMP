@@ -5,8 +5,8 @@
 
 int main ( )
 {
-  int m = 1000;
-  int n = 1000;
+  int m = 10000;
+  int n = 10000;
 
   struct timespec ts_start, ts_end;
 	float time_total;

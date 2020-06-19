@@ -176,15 +176,18 @@ The depend clause enforces additional constraints on the scheduling of tasks or 
 > {: .source}
 >
 > The inner loop cannot be parallelized with `parallel for` construct due to data dependency.
+- Use tasks with dependencies to parallelize this code.
+- You should be able to do this by only adding OpenMP directives.
+- Start with the following serial code:
 >
-> Use tasks with dependencies to parallelize this code. You should be able to do this by only adding OpenMP directives.
->
-> Start with the following serial code:
 > ~~~
 > /* --- File task_depend.c --- */
+> #include <stdlib.h>
+> #include <stdio.h>
+>
 > int main(int argc, char **argv) {
 >
->   int N = 10;
+>   int N = 8;
 >   int x[N][N];
 >   int i,j;
 >
@@ -193,13 +196,16 @@ The depend clause enforces additional constraints on the scheduling of tasks or 
 >     for(j=0;j<N;j++)
 >       x[i][j]=i+j;
 >
->   /* Print serial result */
+>   /* Serial computation */
+>   for(i=1;i<N;i++){
+>     for(j=1;j<N;j++)
+>       x[i][j] = x[i-1][j] + x[i][j-1];
+>   }
+>
 >   printf("Serial result:\n");
 >   for(i=1;i<N;i++){
->     for(j=1;j<N;j++){
->       x[i][j] = x[i-1][j] + x[i][j-1];
+>     for(j=1;j<N;j++)
 >       printf("%8d ",x[i][j]);
->     }
 >     printf("\n");
 >   }
 >
@@ -207,22 +213,79 @@ The depend clause enforces additional constraints on the scheduling of tasks or 
 >   for(i=0;i<N;i++)
 >     for(j=0;j<N;j++)
 >       x[i][j]=i+j;
->   printf("\n");
 >
+>   /* Parallel computation */
 > #pragma omp parallel
+>   /* Generate parallel tasks */
+>   for(i=1;i<N;i++){
+>     for(j=1;j<N;j++)
+>       x[i][j] = x[i-1][j] + x[i][j-1];
+>   }
 >
->   /* Print parallel result */
 >   printf("Parallel result:\n");
 >   for(i=1;i<N;i++){
->     for(j=1;j<N;j++){
->       x[i][j] = x[i-1][j] + x[i][j-1];
+>     for(j=1;j<N;j++)
 >       printf("%8d ",x[i][j]);
->     }
 >     printf("\n");
 >   }
 > }
 > ~~~
 > {: .source}
+> > ## solution
+> > ~~~
+> > /* --- File task_depend_omp.c --- */
+> > #include <stdlib.h>
+> > #include <stdio.h>
+> >
+> > int main(int argc, char **argv) {
+> >
+> >   int N = 8;
+> >   int x[N][N];
+> >   int i,j;
+> >
+> >   /* Initialize x */
+> >   for(i=0;i<N;i++)
+> >     for(j=0;j<N;j++)
+> >       x[i][j]=i+j;
+> >
+> >   /* Serial computation */
+> >   for(i=1;i<N;i++){
+> >     for(j=1;j<N;j++)
+> >       x[i][j] = x[i-1][j] + x[i][j-1];
+> >   }
+> >
+> >   printf("Serial result:\n");
+> >   for(i=1;i<N;i++){
+> >     for(j=1;j<N;j++)
+> >       printf("%8d ",x[i][j]);
+> >     printf("\n");
+> >   }
+> >
+> >   /* Reset x */
+> >   for(i=0;i<N;i++)
+> >     for(j=0;j<N;j++)
+> >       x[i][j]=i+j;
+> >
+> >   /* Parallel computation */
+> > #pragma omp parallel
+> > #pragma omp single
+> >   /* Generate parallel tasks */
+> >   for(i=1;i<N;i++){
+> >     for(j=1;j<N;j++)
+> > #pragma omp task depend(out:x)
+> >       x[i][j] = x[i-1][j] + x[i][j-1];
+> >   }
+> >
+> >   printf("Parallel result:\n");
+> >   for(i=1;i<N;i++){
+> >     for(j=1;j<N;j++)
+> >       printf("%8d ",x[i][j]);
+> >     printf("\n");
+> >   }
+> > }
+> > ~~~
+> > {: .source}
+> {: .solution}
 {: .challenge}
 
 ### Computing Fibonacci Numbers
