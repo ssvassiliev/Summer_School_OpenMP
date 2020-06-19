@@ -1,3 +1,4 @@
+/* --- File elect_energy_omp.c --- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -34,11 +35,10 @@ int main(int argc, char **argv) {
 			}
 	clock_gettime(CLOCK_MONOTONIC, &ts_start);
 
-
 	// Calculate electrostatic energy: sum of charge[i]*charge[j]/dist[i,j] */
 	float dx, dy, dz, dist;
 	double Energy=0.0f;
-#pragma omp parallel for private(j,dx,dy,dz,dist,n) reduction(+:Energy) schedule(static,50)
+#pragma omp parallel for private(j,dx,dy,dz,dist) reduction(+:Energy) schedule(static,50)
 	for (i = 0; i < n_charges; i++) {
 		for (j = i+1; j < n_charges; j++) {
 			dx = x[i]-x[j];
