@@ -67,9 +67,37 @@ If you need to have results from the tasks before you can continue, you can use 
 > }
 > ~~~
 > {: .source}
+>
 > - Turn the factor finding block into a task.
 > - Run your program a number of times. Does it find the wrong factor? Why? Try to fix this.
 > - Once a factor has been found, you should stop generating tasks.
+>
+> > ## Solution
+> > ~~~
+> > #include <stdio.h>
+> > #include <stdlib.h>
+> > #include <time.h>
+> > #include <omp.h>
+> >
+> > int main()
+> > {
+> >     long N = 4993*3001;
+> >     long factor=0;
+> > #pragma omp parallel
+> > #pragma omp single
+> >     for (long f=2; f<=N; f++)
+> > 	if(!factor)
+> > #pragma omp task
+> > 	{ // see if `f' is a factor
+> > 	    if (N%f == 0) { // found factor!
+> > 		factor = f;
+> > 		printf("Found a factor: %li\n",factor);
+> > 	    }
+> > 	}
+> > }
+> > ~~~
+> > {: .source}
+> {: .solution}
 {: .challenge}
 
 ### Task Synchronization
