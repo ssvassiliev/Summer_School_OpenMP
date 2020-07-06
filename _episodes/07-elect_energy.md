@@ -137,7 +137,6 @@ Now comes the parallelization.
 > > }
 > > ~~~
 > > {: .source}
-> > Parallelized version: elect_energy_omp.c
 > {: .solution}
 {: .challenge}
 

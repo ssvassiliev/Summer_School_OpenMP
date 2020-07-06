@@ -6,7 +6,7 @@
 
 int main(int argc, char **argv) {
 	struct timespec ts_start, ts_end;
-	int size = 30;
+	int size = 60;
 	int n_charges = size*size*size;
 	float scale=0.5;
 	float *charge, *x, *y, *z;
