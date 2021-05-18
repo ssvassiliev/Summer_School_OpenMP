@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
 	printf("\nTotal time is %f ms, Energy is %f\n", time_total/1e6, Energy);
 }
 ~~~
-{: .source}
+{:.language-c}
 
 This code generates a set of charges placed at the nodes of the cubic grid. The grid spacing is defined by the *scale* variable.
 
@@ -136,7 +136,7 @@ Now comes the parallelization.
 > > 	printf("\nTotal time is %f ms, Energy is %f\n", time_total/1e6, Energy);
 > > }
 > > ~~~
-> > {: .source}
+> > {:.language-c}
 > {: .solution}
 {: .challenge}
 

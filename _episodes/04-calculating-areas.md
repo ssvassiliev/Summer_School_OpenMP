@@ -31,14 +31,14 @@ int main(int argc, char **argv) {
 	printf("The integral of sine from 0 to Pi is %.12f\n", total);
 }
 ~~~
-{: .source}
+{:.language-c}
 
-> ## Compiling with math
+> ## Compiling code with mathematical functions
 > In order to include the math functions, you need to link in the math library. In GCC, you would use the following:
 > ~~~
-> [user30@login1 ~]$ gcc -o integrate integrate_sin_omp.c -lm
+> gcc -o integrate integrate_sin_omp.c -lm
 > ~~~
-> {: .bash}
+> {: .language-bash}
 {: .callout}
 
 The answer in this case should be 2. It will be off by a small amount because of the limits of computer representations of numbers.
@@ -56,10 +56,13 @@ The answer in this case should be 2. It will be off by a small amount because of
 To see what happens to the time this program takes, we'll use a new tool. Since
 we just want to see the total time, we can use the program `time`.
 
-> ## Timing
-> You can use the time utility to get the amount of time it takes for a program to run.
-> ~~~
-> [user30@login1 ~]$ time -p ./integrate
+> ## Timing code execution
+>You can use the `time` utility to get the amount of time it takes for a program to run.
+>~~~
+>time -p ./integrate
+>~~~
+>{:.language-bash}
+>~~~
 > Using 1e+07 steps
 > Total time is 403.428512 ms
 > The integral of sine from 0 to Pi is 2.000000000000
@@ -67,16 +70,17 @@ we just want to see the total time, we can use the program `time`.
 > user 0.40
 > sys 0.00
 > ~~~
+>{:.output}
 > {: .bash}
-> The `real` output is the useful one; this example took 0.005 seconds to run.
-> The `user` and `sys` lines describe how much time was spent in "user" code
-> and how much in "system" code, a distinction that doesn't interest us today.
+> The output `real` is the useful one; this example took 0.005 seconds to run.
+> The `user` and `sys` lines describe how much time was spent in the "user" code
+> and how much in the "system" code, a distinction that doesn't interest us today.
 {: .callout}
 
 ## Parallelizing numerical integration
 How would you parallelize this code to get it to run faster?
 
-Obviously, we could add `#pragma parallel for`. But do we make `total` private, or not?
+Obviously, we could add `#pragma parallel for`. But do we make the variable `total` private, or not?
 
 The data dependency on `total` leads to what we call a _race condition_. Since we are updating a global variable, there is a race between the various threads as to who can read and then write the value of `total`. Multiple threads could read
 the current value, before a working thread can write the result of its addition. So these reading threads essentially miss out on some additions to the total. This can be
@@ -104,7 +108,7 @@ int main(int argc, char **argv) {
 
 #pragma omp parallel for
 	for (i=0; i<steps; i++) {
-/* pragma omp critical */
+	#pragma omp critical
 		total += sin(delta*i) * delta;
 	}
 	/* Get end time */
@@ -116,7 +120,7 @@ int main(int argc, char **argv) {
 	printf("The integral of sine from 0 to Pi is %.12f\n", total);
 }
 ~~~
-{: .source}
+{:.language-c}
 
 The `critical` directive is a very general construct that lets you ensure a code line is executed exclusively by one thread.
 
@@ -135,17 +139,18 @@ Doing numerical integration we encountered race condition when multiple threads 
 If you have done benchmarking you would see that this control mechanism degraded performance. Parallel version was actually running slower than serial.
 
 ### Another way to avoid race conditions
-The *omp atomic* directive allows access to a specific variable avoiding race condition by controlling concurrent threads that might access the specific memory location directly. This allows to write more efficient code with less locks.
+The `omp atomic` directive allows access to a specific variable avoiding race condition by controlling concurrent threads that might access the specific memory location directly. This allows to write more efficient code with less locks.
 
 ~~~
 #pragma omp atomic
 x[i] += y
 ~~~
+{:.language-c}
 
 Atomic clauses: update (default), write, read, capture
 
-Computing a sum is a very common operation and OpenMP provides a specific thread-safe mechanism to compute a sum: *Reduction clause*.
-The OpenMP reduction clause lets you specify thread-private variables that are subject to a reduction operation at the end of the parallel region.
+Computing a sum is a very common operation and OpenMP provides a specific thread-safe mechanism to compute a sum: `reduction` clause.
+The OpenMP `reduction` clause lets you specify thread-private variables that are subject to a reduction operation at the end of the parallel region.
 
 > ## Reduction Clause
 > - Delele the `critical` directive and add reduction clause to the parallel `for` loop.  Recompile the code and execute. Try different number of threads. Did you get the corect result now?
@@ -153,7 +158,10 @@ The OpenMP reduction clause lets you specify thread-private variables that are s
 > Hint: specify the variable `total` as a reduction variable: `reduction(+:total)`
 >
 > > ## Solution
-> > `#pragma omp parallel for reduction(+:total)`
+> > ~~~
+>> #pragma omp parallel for reduction(+:total)
+>> ~~~
+>>{:.language-c}
 >  {: .solution}
 {: .challenge}
 

@@ -16,19 +16,17 @@ keypoints:
 ---
 
 ## Adding parallelism to a program
-Since OpenMP is an extension to the compiler, you need to be able to tell the compiler when and where to add the code necessary to create and use threads for the parallel sections. This is handled through special statements called pragmas. To a compiler that doesn't understand OpenMP, pragmas look like comments. The basic forms are:
+Since OpenMP is an extension to the compiler, you need to be able to tell the compiler when and where to add the code necessary to create and use threads for the parallel sections. This is handled through special statements called pragmas. To a compiler that doesn't understand OpenMP, pragmas look like comments. The basic forms for C/C++ and Fortran are:
 
-C/C++
 ~~~
 #pragma omp < OpenMP directive >
 ~~~
-{: .source}
+{: .language-c}
 
-FORTRAN
 ~~~
 !$OMP < OpenMP directive >
 ~~~
-{: .source}
+{: .language-fortran}
 
 In C all OpenMP - specific directives start with `#pragma omp`.
 
@@ -45,23 +43,27 @@ int main(int argc, char **argv) {
    printf("Hello World\n");
 }
 ~~~
-{: .source}
+{: .language-c}
 
 To compile it, you'll need to add an extra flag to tell the compiler to treat the source code as an OpenMP program.
 
 ~~~
 gcc -fopenmp -o hello hello.c
 ~~~
-{: .source}
+{: .language-bash}
 
 If you prefer Intel compilers to GCC, use:
-
 ~~~
-module load intel/2019.3
 icc -qopenmp -o hello hello.c
 ~~~
-{: .source}
-**NOTE:** Intel compilers are proprietary, they are available on CC cluster, but not on our test cluster.
+{: .language-bash}
+
+**NOTE:** The default compiler on CC clusters is Intel. Compilers can be switched by loading modules:
+~~~
+module load gcc
+module load intel
+~~~
+{: .language-bash}
 
 When you run this program, you should see the output "Hello World" multiple
 times. But how many?
@@ -74,7 +76,7 @@ You can control the number of threads with environment variable OMP_NUM_THREADS.
 export OMP_NUM_THREADS=3
 ./hello
 ~~~
-{: .bash}
+{: .language-bash}
 
 > ## Using multiple cores
 > Try running the "hello" program with different numbers of threads.
@@ -92,20 +94,18 @@ export OMP_NUM_THREADS=3
 > export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 > ./hello
 > ~~~
-> {: .bash}
+> {: .language-bash}
 >
 > You could also ask for an interactive session with multiple cores like so:
 > ~~~
-> salloc --account=sponsor0 --cpus-per-task=3 --time=1:0:0
+> [user45@login1 ~]$ salloc --mem-per-cpu=1000 --cpus-per-task=3 --time=1:0:0
 > ~~~
-> {: .bash}
+> {: .language-bash}
 > ~~~
-> [user30@login1 ~]$ salloc --account=sponsor0 --cpus-per-task=3 --time=1:0:0
-> salloc: Granted job allocation 54
-> salloc: Waiting for resource configuration
-> salloc: Nodes c14r56g1-node1 are ready for job
-> [user30@c14r56g1-node1 ~]$ nproc
-> 3
+>salloc: Granted job allocation 179
+>salloc: Waiting for resource configuration
+>salloc: Nodes node1 are ready for job
+>[user45@node1 ~]$ 
 > ~~~
 > {: .output}
 >  The most practical way to run our short parallel program on our test cluster is using *srun* command. Instead of submitting the job to the queue  *srun* will run the program from the interactive shell as soon as requested resources will become available. After the job is finished slurm will release the allocated resources and exit. *Srun* understands the same keywords as *sbatch* and *salloc*.
@@ -117,7 +117,7 @@ export OMP_NUM_THREADS=3
 > # or even shorter:
 > srun -c4 hello
 > ~~~
-> {: .bash}
+> {: .language-bash}
 {: .callout}
 
 ## Identifying threads
@@ -130,7 +130,7 @@ export OMP_NUM_THREADS=3
 > tar -xf omp.tar.gz
 > cd code
 > ~~~
-> {: .source}
+> {: .language-bash}
 {: .callout}
 
 How can you tell which thread is doing what? The OpenMP specification includes a number of functions that are made available through the included header file "omp.h". One of them is the function "omp_get_thread_num( )", used to get an ID of the thread running the code.
@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
    }
 }
 ~~~
-{: .source}
+{: .language-c}
 
 Here, you will get each thread tagging their output with their unique ID, a number between 0 and (number of threads - 1).
 
@@ -195,7 +195,7 @@ Here, you will get each thread tagging their output with their unique ID, a numb
 > >    }
 > > }
 > > ~~~
-> > {: .source}
+> > {: .language-c}
 > {: .solution}
 {: .challenge}
 
@@ -219,13 +219,14 @@ A work-sharing construct divides the execution of the enclosed code region among
         c[i] = a[i] + b[i];
 ...
 ~~~
-{: .source}
+{: .language-c}
 
 > ## Stack Overflow
 > If you declare large arrays like this:
 > ~~~
 >  A[1000][1000];
 > ~~~
+>{: .language-c}
 > Your program may emit "Segmentation fault" message and crash. These arrays are allocated on stack and stack on our cluster is very limited (8MB).
 {: .callout}
 
@@ -253,7 +254,7 @@ A work-sharing construct divides the execution of the enclosed code region among
     }  /* end of sections */
   }  /* end of parallel region */
 ~~~
-{: .source}
+{: .language-c}
 
 Here *nowait* keyword (clause) means that the program will not wait at the end of `sections` block for all threads to finish.
 

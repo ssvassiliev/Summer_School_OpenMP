@@ -17,7 +17,7 @@ keypoints:
 So far, we have looked at parallelizing loops.
 - OpenMP also allows you to use general parallel sections ([parallel **Construct**](https://www.openmp.org/spec-html/5.0/openmpse14.html)).
 
-When a thread encounters **#pragma omp parallel** directive OpenMP creates a team of threads. The thread that encountered the **parallel** directive first becomes the master thread of the new team, with a thread number of zero. Parallel region is executed by all of the available threads.
+When a thread encounters `#pragma omp parallel` directive OpenMP creates a team of threads. The thread that encountered the `parallel` directive first becomes the master thread of the new team, with a thread number of zero. Parallel region is executed by all of the available threads.
 
 In these cases, it is up to you as a programmer to manage what work gets done by each thread. A basic example would look like the following.
 
@@ -37,10 +37,10 @@ int main(int argc, char **argv) {
    }
 }
 ~~~
-{: .source}
+{:.language-c}
 
 > ## Private variables
-> What happens if you forget the private keyword?
+> What happens if you forget the `private` keyword?
 {: .challenge}
 
 Using this as a starting point, we could use this code to have each available thread do something interesting. For example, we could write the text out to a series of individual files.
@@ -49,7 +49,7 @@ Using this as a starting point, we could use this code to have each available th
 
 There are times when you may need to drop out of a parallel section in order to have a single one of the threads executing some code.
 
-- The ``#pragma omp single` directive allows us to do this.
+- The `#pragma omp single` directive allows us to do this.
 
 A code block associated with the `single` directive will be executed by only the first thread to see it.
 
@@ -77,6 +77,7 @@ More information: [**single Construct**](https://www.openmp.org/spec-html/5.0/op
 >    }
 > }
 > ~~~
+> {:.language-c}
 > {: .source}
 >
 > > ## Solution
@@ -97,7 +98,7 @@ More information: [**single Construct**](https://www.openmp.org/spec-html/5.0/op
 > >    }
 > > }
 > > ~~~
-> > {: .source}
+> > {:.language-c}
 > {: .solution}
 {: .challenge}
 
@@ -116,31 +117,33 @@ int main(int argc, char **argv) {
    int i;
    float curr_max;
 
-   /* Initialize with random values
+   /* Initialize with random values */
    for (i=0; i<size; i++) {
       rand_nums[i] = rand();
    }
 
+   /* Find maximum */
    curr_max = 0.0;
    for (i=0; i<size; i++) {
       if (curr_max < rand_nums[i]) {
          curr_max = rand_nums[i];
       }
    }
+
    printf("Max value is %f\n", curr_max);
 }
 ~~~
-{: .source}
+{:.language-c}
 
-The first stab would be to make the for loop a parallel for loop. You would want to make sure that each thread had a private copy of the *curr_max* variable, since it will be written to. But, how do you find out which thread has the largest value?
+The first stab would be to make the `for` loop a `parallel for` loop. You would want to make sure that each thread had a private copy of the *curr_max* variable, since it will be written to. But, how do you find out which thread has the largest value?
 
 ## Reduction Operators
 
-You could create an array of `curr_maxes`, but getting that to work right would be messy. How do you adapt to different NUM_THREADS?
+You could create an array of `curr_max` variables, but getting that to work right would be messy. How do you adapt to different NUM_THREADS?
 
  The keys here are
  1. To recognize the analogy with the problem of `total` from the last episode, and
- 2. To know about *reduction variables*.
+ 2. To know about `reduction variables`.
 
  A reduction variable is used to accumulate some value over parallel threads, like a sum, a global maximum, a global minimum, etc.
  The reduction operators that you can use are:
@@ -186,4 +189,4 @@ You could create an array of `curr_maxes`, but getting that to work right would 
 	printf("Max value is %d\n", curr_max);
  }
  ~~~
- {: .source}
+ {:.language-c}

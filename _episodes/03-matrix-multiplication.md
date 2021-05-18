@@ -44,6 +44,7 @@ int main(int argc, char **argv) {
 	for (i = 0; i<size; i++) {
 		c[i] = multiplier * a[i];
 	}
+
 	/* Get end time */
 	clock_gettime(CLOCK_MONOTONIC, &ts_end);
 
@@ -52,13 +53,19 @@ int main(int argc, char **argv) {
 	printf("Total time is %f ms\n", time_total/1e6);
 }
 ~~~
-{: .source}
+{: .language-c}
 
 > ## Compiling and running
-> Compiling: `gcc array_multiply.c -o array_multiply`
->
+> Compiling: 
+>~~~
+gcc array_multiply.c -o array_multiply
+>~~~
+>{:.language-bash}
 > Running with 4 threads:
-> `srun --mem-per-cpu=4000 array_multiply`
+>~~~
+> srun --mem-per-cpu=4000 array_multiply
+>~~~
+>{:.language-bash}
 {: .callout}
 
 We added calls to *clock_gettime( )* from the *time.h* header file to get the start and end times of the heavy work being done by the for loop. In this case, we get a count of how many seconds and how many nanoseconds elapsed, given in two parts of the time structure. We did some math to get the elapsed time in milliseconds.
@@ -73,9 +80,20 @@ Then change the size of the array, recompile and rerun the program. Did executio
 > What happens if you change the size and recompile and rerun?
 {: .challenge}
 
-How complicated is it to turn this program into a parallel program?
-Not complicated at all:  We add two lines, `#include <omp.h>` near the top,
-and  `#pragma omp parallel for` just before the `for (...)` statement:
+How complicated is it to turn this program into a parallel program?  
+Not complicated at all.  We add two lines:
+~~~
+#include <omp.h> 
+~~~
+{: .language-c}
+
+and  
+~~~
+#pragma omp parallel for
+~~~
+{: .language-c}
+
+just before the main `for` loop:
 
 ~~~
 /* --- File array_multiply_omp.c --- */
@@ -111,13 +129,21 @@ int main(int argc, char **argv) {
 	printf("Total time is %f ms\n", time_total/1e6);
 }
 ~~~
-{: .source}
+{: .language-c}
 
 > ## Compiling and running
-> Compiling: `gcc array_multiply_omp.c -o array_multiply_omp -fopenmp`
+>
+> Compiling:
+>~~~
+>gcc array_multiply_omp.c -o array_multiply_omp -fopenmp
+>~~~
+>{:.language-bash}
 >
 > Running with 4 threads:
-> `srun -c4 --mem-per-cpu=1000 array_multiply_omp`
+>~~~
+> srun -c4 --mem-per-cpu=1000 array_multiply_omp
+>~~~
+>{:.language-bash}
 {: .callout}
 
 Run the program with different number of threads and observe how the runtime changes.
@@ -132,7 +158,6 @@ In this case, the number of iterations around the for loop gets divided across t
 * You must not use a call to `break()` or `exit()` within the for loop, either. These functions pop you out of the for loop before it is done.
 
 ## Summing the values in a matrix
-
 Now let's try adding up the elements of a matrix.
 Moving up to two dimensions adds a new layer of looping. The basic code looks like the following.
 
@@ -188,7 +213,7 @@ int main(int argc, char **argv) {
 	printf("Total is %d, time is %f ms\n", total, time_total/1e6);
 }
 ~~~
-{: .source}
+{: .language-c}
 
 > ## Is the result correct?
 > What should be the result of this code?
@@ -208,7 +233,7 @@ int main(int argc, char **argv) {
 > >    #pragma omp parallel for private(j)
 > >    ...
 > > ~~~
-> > {: .source}
+> > {: .language-c}
 > >
 > > This makes sure that every thread has their own private copy of `j` to be used for the inner for loop.
 > {: .solution}
@@ -231,7 +256,7 @@ for ( i=2; i<N; i=i+1 ) {
     a[i] = a[i] + a[i-1];
 }
 ~~~
-{: .source}
+{: .language-c}
 
 The iteration with `i==2` for example reads locations `a[1]` and `a[2]` and
 writes location `a[2]`.  The iteration with `i==3` then reads locations
@@ -249,7 +274,7 @@ There are three types of data dependencies:
 * Flow dependencies, like the last example, when one statement uses the results of another
 * Anti-dependencies, when one statement should write to a location only ''after'' another has read what's there
 * Output dependencies, when two statements write to a location, so the result will depend on which one wrote to it last
-There's a wikipedia page on data depencies: <https://en.wikipedia.org/wiki/Data_dependency>
+There's a wikipedia page on data dependencies: <https://en.wikipedia.org/wiki/Data_dependency>
 
 > ## Is There a Dependency?
 >
@@ -273,18 +298,18 @@ There's a wikipedia page on data depencies: <https://en.wikipedia.org/wiki/Data_
 >     a[idx[i]] = a[idx[i]] + b[idx[i]]; }
 > Depends
 > ~~~
-> {: source}
+> {: .language-c}
 >
 > > ## Solution
 > >
 > > Loop #1 does not.
-> > The increment of this loop is 2, so in the step a[2]=a[2]+a[1]. In the next iterration we compute a[4]=a[4]+a[3] ... etc.
+> > The increment of this loop is 2, so in the step a[2]=a[2]+a[1]. In the next iteration we compute a[4]=a[4]+a[3] ... etc.
 > >
 > > Loop #2 does not.
 > > In this range of i values each thread modifies only one element of array a.
 > >
 > > Loop #3 does.
-> > Here the last iterration creates data dependency writing to a[N/2]:
+> > Here the last iteration creates data dependency writing to a[N/2]:
 > >
 > > a[N/2] = a[N/2] + a[N]
 > >
