@@ -174,6 +174,8 @@ Function definitions have the following format:
      {: .language-c}
 
 #### Using Memory 
-if you are trying to use "large" stack-allocated arrays. In most (and probably all) runtime systems, stack-allocated arrays will not get properly allocated if the memory required is larger than some system-dependent threshold. Programs that attempt to stack-allocate arrays requiring more than this threshold will therefore typically crash as soon as they try to use the array.
+
+- Static arrays are allocated on stack.
+- Size of stack-allocated arrays is limited by system-dependent threshold. Programs that attempt to stack-allocate arrays requiring more than this threshold will therefore crash as soon as they try to use the array.
 
 Dynamic memory allocation is when an executing program requests that the operating system give it a block of main memory. The program then uses this memory for some purpose. 

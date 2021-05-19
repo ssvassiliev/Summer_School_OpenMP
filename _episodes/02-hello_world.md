@@ -58,10 +58,9 @@ icc -qopenmp -o hello hello.c
 ~~~
 {: .language-bash}
 
-**NOTE:** The default compiler on CC clusters is Intel. Compilers can be switched by loading modules:
+**NOTE:** The default compilers in StdEnv/2020 are gcc/9.3.0 and Intel/2020.1.217. Other compilers can be used by loading their respective modules. For example, to load gcc/10:
 ~~~
-module load gcc
-module load intel
+module load gcc/10.2.0
 ~~~
 {: .language-bash}
 
@@ -80,9 +79,15 @@ export OMP_NUM_THREADS=3
 
 > ## Using multiple cores
 > Try running the "hello" program with different numbers of threads.
-> - Can you use more threads than the cores on the machine?
+> - Can you use more threads than the cores on the machine?  
 > You can use *nproc* command to find out how many cores are on the machine.
+>
+>>## Solution
+>> Threads are an OS abstraction and have no direct relationship to cores. You can launch as many threads as you want (the maximum number of threads can be limited by OS and/or OpenMP implementation), however the performance may degrade.
+> {: .solution} 
 {: .challenge}
+
+
 
 > ## OpenMP with Slurm
 > When you wish to submit an OpenMP job to the job scheduler Slurm, you can use the following boilerplate.
@@ -133,7 +138,8 @@ export OMP_NUM_THREADS=3
 > {: .language-bash}
 {: .callout}
 
-How can you tell which thread is doing what? The OpenMP specification includes a number of functions that are made available through the included header file "omp.h". One of them is the function "omp_get_thread_num( )", used to get an ID of the thread running the code.
+How can we tell which thread is doing what?   
+The OpenMP specification includes a number of functions that are made available through the included header file "omp.h". One of them is the function "omp_get_thread_num( )", used to get an ID of the thread running the code.
 
 ~~~
 /* --- File hello_world_omp.c --- */
@@ -176,7 +182,7 @@ Here, you will get each thread tagging their output with their unique ID, a numb
 > - What happens?
 > - Can you figure out how to fix it?
 >
-> Hint: The compiler defines preprocessor macro \_OPENMP, so you could use #ifdef ... #endif preprocessor directives
+> Hint: If compiler is called with the OpenMP option it defines preprocessor macro \_OPENMP, so you can use `#ifdef _OPENMP` and `#endif` preprocessor directives to tell compiler to process the line calling the *omp_get_thread_num()* function only if this macro is defined.
 > > ## Solution
 > > ~~~
 > >
@@ -222,12 +228,16 @@ A work-sharing construct divides the execution of the enclosed code region among
 {: .language-c}
 
 > ## Stack Overflow
-> If you declare large arrays like this:
+> The easiest way to declare arrays as static: 
 > ~~~
->  A[1000][1000];
+>  A[2048][2048];
 > ~~~
 >{: .language-c}
-> Your program may emit "Segmentation fault" message and crash. These arrays are allocated on stack and stack on our cluster is very limited (8MB).
+>Globally defined static arrays are allocated when a program starts, and they occupy memory until a program ends. If you declare large arrays as static, your program may crash with a "Segmentation fault" error. Static arrays are allocated on the stack, and the OS limits the size of the stack memory available to a user. You can check your stack memory limit using the command:
+>~~~
+>ulimit -s
+>~~~
+>{:.language-c}
 {: .callout}
 
 #### *Sections*

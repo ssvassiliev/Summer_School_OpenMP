@@ -18,15 +18,16 @@ One of the classic applications of programming is linear algebra, in all of its 
 
 ## Multiply an array by a constant
 
-The simplest problem is applying some function to an array of numbers. An example is multiplying each value by some constant number. In serial you would use a for loop (in C; a DO loop in Fortran) to do this multiplication for each element, like this:
+The simplest problem is applying some function to an array of numbers. An example is multiplying each value by some constant number. In serial code you would loop over all array elements to do this multiplication:
 
 ~~~
-/* --- File array_multiply.c --- */
+/*  -- File array_multiply.c --- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	struct timespec ts_start, ts_end;
 	int size = 1e8;
 	int multiplier = 2;
@@ -35,22 +36,24 @@ int main(int argc, char **argv) {
 	float time_total;
 
 	/* Allocate memory for arrays */
-	a = malloc(size*sizeof(int));
-	c = malloc(size*sizeof(int));
+	a = malloc(size * sizeof(int));
+	c = malloc(size * sizeof(int));
 
 	/* Get start time */
 	clock_gettime(CLOCK_MONOTONIC, &ts_start);
 
-	for (i = 0; i<size; i++) {
+	/* Multiply array a by multiplier */
+	for (i = 0; i < size; i++)
+	{
 		c[i] = multiplier * a[i];
 	}
 
 	/* Get end time */
 	clock_gettime(CLOCK_MONOTONIC, &ts_end);
 
-	time_total = (ts_end.tv_sec - ts_start.tv_sec)*1e9 + \
-		     (ts_end.tv_nsec - ts_start.tv_nsec);
-	printf("Total time is %f ms\n", time_total/1e6);
+	time_total = (ts_end.tv_sec - ts_start.tv_sec) * 1e9 +
+				 (ts_end.tv_nsec - ts_start.tv_nsec);
+	printf("Total time is %f ms\n", time_total / 1e6);
 }
 ~~~
 {: .language-c}
@@ -68,11 +71,11 @@ gcc array_multiply.c -o array_multiply
 >{:.language-bash}
 {: .callout}
 
-We added calls to *clock_gettime( )* from the *time.h* header file to get the start and end times of the heavy work being done by the for loop. In this case, we get a count of how many seconds and how many nanoseconds elapsed, given in two parts of the time structure. We did some math to get the elapsed time in milliseconds.
+We added calls to *clock_gettime( )* function declared in the *time.h* header file to get the start and end times of the heavy work being done by the for loop. In this case, we get a count of how many seconds and how many nanoseconds elapsed, given in two parts of the time structure. We did some math to get the elapsed time in milliseconds.
 
 Try to run the program several times and record execution time. What happens to the run time of your program through multiple runs?
 
-Then change the size of the array, recompile and rerun the program. Did execution time changed?
+Then change the size of the array, recompile and rerun the program. Did execution time change?
 
 
 > ## Time and Size
