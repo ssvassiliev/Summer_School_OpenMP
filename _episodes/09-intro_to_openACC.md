@@ -13,10 +13,12 @@ keypoints:
 
 ## Introduction
  
-As we learned in the *General Parallel Computing* lesson increasing performance is based on various strategies such as CPU frequency, multicore processing, vectorization, parallel distributed computing. At present performance is mostly limited by power consumption. Accelerators such as Nvidia Tesla GPUs are based on a very high level of parallelism and are capable to reach high performance at relatively low power consumption.  GPUs can deliver very high performance per compute node.
+As we learned in the *General Parallel Computing* lesson increasing performance is based on various strategies such as CPU frequency, multicore processing, vectorization, parallel distributed computing. At present performance is mostly limited by power consumption. Accelerators such as Nvidia Tesla GPUs are based on a very high level of parallelism and are capable to reach high performance at relatively low power consumption.  GPUs can deliver very high performance per compute node and today, GPGPUs are the choice of hardware to accelerate computational workloads in HPC settings. Let's look at the GPU architecture to understand why they are a good fit for various types of HPC jobs.
 
-### Introduce GPU architecture 
+### The GPU Architecture 
+CPUs are optimized to carry out tasks as quick as possible, while keeping the ability to quickly switch between operations. It’s nature is all about processing tasks in a serialized way
 
+GPUs achieve high throughput by trading single-threaded performance in favor of several orders in magnitude more parallelism.
 
 ### Tools for programming GPUs
  There are several tools available for programming GPU.
@@ -55,8 +57,7 @@ $$ U(i,j,m+1) = ( U(i-1,j,m) + U(i+1,j,m) + U(i,j-1,m) + U(i,j+1,m) + f(i,j) )/4
 
 
 http://people.eecs.berkeley.edu/~demmel/cs267/lecture24/lecture24.html
-
-
+https://nielshagoort.com/2019/03/12/exploring-the-gpu-architecture/
 
 [View NVIDIA HPC-SDK](https://docs.nvidia.com/hpc-sdk/compilers/index.html) documentation.
 
@@ -127,3 +128,4 @@ working:
 module load StdEnv/2016 python
 virtualenv env-phoebe
 source env-phoebe/bin/activate
+pip install phoebe==2.3.40

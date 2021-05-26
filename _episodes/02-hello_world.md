@@ -30,8 +30,11 @@ Since OpenMP is an extension to the compiler, you need to be able to tell the co
 
 In C all OpenMP - specific directives start with `#pragma omp`.
 
-How do we add in parallelism to the basic hello world program? The very first directive that we will look at is the `parallel` directive. The `parallel` directive forks threads to carry out the work given in the `parallel` block of code.
+How do we add in parallelism to the basic hello world program?
 
+OpenMP is a library of functions and macros, so we need to include a header file *omp.h* with prototypes and macro definitions.
+
+The very first directive that we will look at is the `parallel` directive. The `parallel` directive forks threads to carry out the work given in the `parallel` block of code.
 ~~~
 #include <stdio.h>
 #include <stdlib.h>
@@ -77,20 +80,26 @@ export OMP_NUM_THREADS=3
 ~~~
 {: .language-bash}
 
+### Execution steps of the parallel "Hello, world" program
+- The *parallel* pragma directs compiler to make a code that will start a number of threads equal to what was passed to the program via the variable OMP_NUM_THREADS 
+- Each thread then executes the function *printf("Hello World\n")*
+- The threads rejoin the main thread when they return
+from the *printf()* function, at which point they are terminated 
+- The main thread is then terminated itself
+
 > ## Using multiple cores
 > Try running the "hello" program with different numbers of threads.
 > - Can you use more threads than the cores on the machine?  
+>
 > You can use *nproc* command to find out how many cores are on the machine.
 >
 >>## Solution
->> Threads are an OS abstraction and have no direct relationship to cores. You can launch as many threads as you want (the maximum number of threads can be limited by OS and/or OpenMP implementation), however the performance may degrade.
+>> Threads are an OS abstraction and have no direct relationship to cores. You can launch as many threads as you want (the maximum number of threads can be limited by OS and/or OpenMP implementation), however the performance may degrade if you use more threads than physical cores.
 > {: .solution} 
 {: .challenge}
 
-
-
-> ## OpenMP with Slurm
-> When you wish to submit an OpenMP job to the job scheduler Slurm, you can use the following boilerplate.
+> ## OpenMP with SLURM
+> When you wish to submit an OpenMP job to the job scheduler SLURM, you can use the following boilerplate.
 > ~~~
 > #!/bin/bash
 > #SBATCH --account=sponsor0
@@ -115,7 +124,7 @@ export OMP_NUM_THREADS=3
 > {: .output}
 >  The most practical way to run our short parallel program on our test cluster is using *srun* command. Instead of submitting the job to the queue  *srun* will run the program from the interactive shell as soon as requested resources will become available. After the job is finished slurm will release the allocated resources and exit. *Srun* understands the same keywords as *sbatch* and *salloc*.
 >
-> In SLURM environment operating system will see as many CPUs as you requested, so there is no need to set OMP_NUM_THREADS variable to $SLURM_CPUS_PER_TASK.
+> In SLURM environment operating system will see as many CPUs as you requested, so strictly there is no need to set OMP_NUM_THREADS variable to $SLURM_CPUS_PER_TASK.  
 >
 > ~~~
 > srun --cpus-per-task=4 hello

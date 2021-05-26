@@ -10,24 +10,27 @@ keypoints:
 - "OpenMP can manage general parallel tasks"
 ---
 
-The last technique we will look at is the `task` construct. Tasks is the most recent addition to omp constructs.
-Older constructs worked well for many cases but there were limitations. Only loops with a known length at run time were allowed. And only finite number of parallel sections.
+The last technique we will look at is the *omp task* directive. It is the most recent addition to omp constructs introduced in OpenMP specification version 3.0 in 2008. Older constructs worked well for many cases but there were limitations. Only loops with a known length at run time were allowed, and only finite number of parallel sections.
 
-This didn’t work well with certain common problems. Linked lists and recursive algorithms for example. Another concept that was hard to parallelize was the `while` loop with it's unknown number of iterations.
+This didn’t work well with certain common problems such as recursive algorithms  and linked lists. Another control flow statement that was hard to parallelize was the *while* loop with it's unknown number of iterations.
 
-The task construct addresses these issues by generating a pool of tasks that are then executed by all available threads. Typically, one thread will generate the tasks, adding them to a queue, from which all threads can take and execute them. This leads to the following code:
+The *omp task* directive addresses these issues by generating a pool of tasks that are then executed by all available threads. Typically, one thread will generate the tasks and add them to a queue. All threads then can take and execute tasks from this queue. 
+
+A task is composed of the code to be executed and the data environment (inputs to be used and outputs to be generated).
+
+
+This leads to the following code:
 
 ~~~
 #pragma omp parallel
 #pragma omp single
-{
-...
+{ 
+    /* Code generating tasks */
 #pragma omp task
-{ ... }
-...
+    { /* task 1 */}
 #pragma omp task
-{ ... }
-...
+    { /* Task 2 */}
+    /* Code to run after task */
 }
 ~~~
 {:.language-c}
@@ -145,16 +148,6 @@ y = g(x)
 {:.language-c}
 
 This example illustrates Read after Write (RaW) dependency: the first task writes x which is then read by the second task.
-
-Since either task can read or write a variable, there are four types of dependencies.
-
-1. `RaW (Read after Write)`. The second task reads an item that the previous task writes. The second task has to be executed after the first:
-
-2. `WaR (Write after Read)`. The first task reads and item, and the second task overwrites it. The second task has to be executed second to prevent overwriting the initial value:
-
-3. `WaW (Write after Write)`. Both tasks set the same variable. Since the variable can be used by an intermediate task, the two writes have to be executed in this order.
-
-4. `RaR (Read after Read)`. Both tasks read a variable. Since neither tasks has an `out' declaration, they can run in either order.
 
 The depend clause enforces additional constraints on the scheduling of tasks or loop iterations. These constraints establish dependences only between sibling tasks or between loop iterations. The task dependence is fulfilled when the predecessor task has completed.
 

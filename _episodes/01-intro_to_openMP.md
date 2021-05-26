@@ -35,6 +35,9 @@ All commonly used compilers such as gcc, clang, Intel, Nvidia HPC, and Absoft su
 For an overview of the past, present and future of the OpenMP read the paper ["The Ongoing Evolution of OpenMP"](https://ieeexplore.ieee.org/document/8434208).
 
 ## OpenMP Execution Model
+
+The philosophy of OpenMP is to not sacrifice ease of coding and maintenance in the name of performance.
+
 - OpenMP programs realizes parallelism through the use of threads. Recollect that a thread is the smallest unit of computing that can be scheduled by an operating system. In other words a thread is a subroutine that can be scheduled to run autonomously. Threads exist within the resources of a single process. Without the process, they cease to exist.  
 - OpenMP offers the programmer full control over parallelization. It is an explicit, not automatic programming model.  
 - OpenMP uses the so-called fork-join model of parallel execution:
