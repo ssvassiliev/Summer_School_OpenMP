@@ -1,25 +1,26 @@
-/* File find_factor.c */
+/* File: find_factor.c */
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 int main()
 {
-  long N = 4993 * 5393;
-  long factor = 0;
-#pragma omp parallel
-#pragma omp single
-  for (long f = 2; f <= N; f++) /* Loop generating tasks */
-  {
-    { /* Check if f is a factor */
-      if (N % f == 0)
-      { // the remainder is 0, found factor!
-        factor = f;
-      }
-    } 
-    if (factor > 0)
-      break;
-  } /* End of loop generating tasks */
-  if (factor > 0)
-    printf("Factor: %li\n", factor);
+    int N = 26927249;
+    int f;
+    for (f = 2; f <= N; f++)
+    {
+        if (f % 200 == 0) /* Print progress */
+        {
+            fprintf(stdout, "checking: %li\n", f);
+            fflush(stdout);
+        }
+
+        /* Check if f is a factor */
+        if (N % f == 0)
+        { // the remainder is 0, found factor!
+            fprintf(stdout, "Factor: %li\n", f);
+            exit(0);
+        }
+        for (int i = 1; i < 4e6; i++)
+            ; /* Burn some CPU cycles */
+    }
 }

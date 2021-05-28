@@ -1,5 +1,5 @@
 ---
-title: "Tasks"
+title: "OpenMP Tasks"
 teaching: 20
 exercises: 5
 questions:
@@ -8,98 +8,150 @@ objectives:
 - "Use general parallel tasks"
 keypoints:
 - "OpenMP can manage general parallel tasks"
+- "tasks now allow the parallelization of applications exhibiting irregular parallelism such as recursive algorithms, and pointer-based data structures."
 ---
+## Introduction
 
-The last technique we will look at is the *omp task* directive. It is the most recent addition to omp constructs introduced in OpenMP specification version 3.0 in 2008. Older constructs worked well for many cases but there were limitations. Only loops with a known length at run time were allowed, and only finite number of parallel sections.
+The last construct we will look at is the *omp task*. It is the most recent addition to OpenMP specification introduced in version 3.0 in 2008. Older constructs worked well for many cases but there were limitations hampering development of rapidly developing advanced applications.   
+- Only loops with a known length at run time were allowed, and only finite number of parallel sections.
 
-This didn’t work well with certain common problems such as recursive algorithms  and linked lists. Another control flow statement that was hard to parallelize was the *while* loop with it's unknown number of iterations.
+This didn’t work well with certain common problems such as recursive or pointer-chasing algorithms.
 
-The *omp task* directive addresses these issues by generating a pool of tasks that are then executed by all available threads. Typically, one thread will generate the tasks and add them to a queue. All threads then can take and execute tasks from this queue. 
+- Pointer chasing algorithms employ a series of irregular memory access patterns where the data of the previous memory access is required in order to determine the memory address of the next pointer.
 
-A task is composed of the code to be executed and the data environment (inputs to be used and outputs to be generated).
+ Another flow control statement that was hard to parallelize was the *while* loop with it's unknown number of iterations.
 
+The *omp task* construct addresses these issues by generating tasks that are then executed by all available threads. 
 
-This leads to the following code:
+What is a task?   
+- A task is composed of the code to be executed and the data environment (inputs to be used and outputs to be generated).
 
+General concept of tasks is not new to OpenMP, but before introduction of the *omp task* construct tasks were implicit. For example an *omp parallel* construct creates implicit tasks, one task per thread and tasks execution begins.  
+
+The *omp task* specification introduced a different model. When a thread encounters the *task* construct it will create an explicit task. The execution of an explicit task may be immediate or delayed. If delayed, the task in placed in a pool of tasks associated with the current parallel region. All available threads can take tasks out of the pool and execute them until the pool is empty. The OpenMP specification further permits an implementation to suspend the generation of tasks, and to suspend the execution of specific tasks, in order to maintain system efficiency.
+
+Due to its dynamic nature, a tasking implementation is more complicated than its static counterparts. In addition to the basic functions of creating and controlling dependencies between tasks, the run-time tasking implementation need to decide how and when to schedule tasks. The function of an ideal scheduler is very complex: it should be able to dynamically balance the workload on the threads, ensuring that all the threads do the same amount of work.
+At the same time it should consider data locality. To address the latter tasks operating on the same data should be scheduled for execution on the same thread to improve data reuse and maximize performance.
+
+Another important problem affecting performance is task  generation. A task-generating program can overload a system’s resources, like memory usage, placing a strain on the system. Recursive algorithms, in particular, can quickly generate millions of tasks.
+
+As the OpenMP specification does not prescribe the algorithm for scheduling tasks for execution, the implementation of the scheduling is compiler-specific. 
+
+A typical program using tasks would follow the code shown below:
 ~~~
-#pragma omp parallel
-#pragma omp single
-{ 
-    /* Code generating tasks */
-#pragma omp task
-    { /* task 1 */}
-#pragma omp task
-    { /* Task 2 */}
-    /* Code to run after task */
+/* Create threads */
+#pragma omp parallel 
+{
+    #pragma omp single 
+    { 
+        for(i<1000) /* Generate tasks */
+        #pragma omp task
+           work_on(i) 
+    }
 }
 ~~~
 {:.language-c}
 
-A parallel region creates a team of threads; a single thread then creates the tasks, adding them to a queue that belongs to the team, and all the threads in that team execute tasks from this queue. Tasks could run in any order.
+- A parallel region creates a team of threads 
+- A single thread then creates the tasks, adding them to a pool that belongs to the team
+- All the threads in that team execute tasks from this queue. Tasks could run in any order.
 
-If you need to have results from the tasks before you can continue, you can use the `taskwait` directive to tell OpenMP to pause your program until the tasks are done.
+If you need to have results from the tasks before you can continue, you can use the *taskwait* directive to pause your program until the tasks are done.
 
-> ## Finding the Smallest Factor
-> Use tasks to find the smallest factor of a large number (using 4993*5393 as test case). Generate a task for each trial factor. Start with this code:
->
-> ~~~
-> /* File find_factor.c */
-> #include <stdio.h>
-> #include <stdlib.h>
-> #include <time.h>
-> int main()
-> {
-> long N = 4993*5393;
-> long factor=0;
-> #pragma omp parallel
-> #pragma omp single
-> for (long f=2; f <= N; f++)  
->   { /* see if `f' is a factor */
->     if (N%f == 0) {
->       factor = f;
->       printf("Found a factor: %li\n",factor);
->       exit(0);
->     }
->   }
-> }
-> ~~~
-> {:.language-c}
->
-> - Turn the factor finding block into a task.
-> - Run your program a number of times. Does it find the wrong factor? Why? Try to fix this.
-> - Once a factor has been found, you should stop generating tasks.
->
-> > ## Solution
-> > ~~~
-> > #include <stdio.h>
-> > #include <stdlib.h>
-> > #include <time.h>
-> > #include <omp.h>
-> >
-> > int main()
-> > {
-> > long N = 4993*3001;
-> > long factor=0;
-> > #pragma omp parallel
-> > #pragma omp single
-> > for (long f=2; f<=N; f++)
-> >  if(!factor)
-> >  #pragma omp task
-> >   { /* see if `f' is a factor */
-> >    if (N%f == 0) {
-> >    factor = f;
-> >    printf("Found a factor: %li\n",factor);
-> >     }
-> >   }
-> >}
-> > ~~~
-> > {:.language-c}
-> {: .solution}
-{: .challenge}
+### Example - finding smallest factor
+
+Let's use tasks to find the smallest factor of a large number (using 4993*5393 as test case). Start with the serial code:
+
+~~~
+/* File: find_factor.c */
+#include <stdio.h>
+#include <stdlib.h>
+
+int main()
+{
+    int N = 26927249;
+    int f;
+    for (f = 2; f <= N; f++)
+    {
+        if (f % 200 == 0) /* Print progress */
+        {
+            fprintf(stdout, "checking: %li\n", f);
+            fflush(stdout);
+        }
+        /* Check if f is a factor */
+        if (N % f == 0)
+        { // The remainder is 0, found factor!
+            fprintf(stdout, "Factor: %li\n", f);
+            exit(0); /* Terminate the program */
+        }
+        for (int i = 1; i < 4e6; i++)
+            ; /* Burn some CPU cycles */
+        /* End of factor finding block */    
+    }
+}
+~~~
+{:.language-c}
+
+- Turn the factor finding block into a task.
+- Generate a task for each trial factor.
+- Once a factor has been found, you should stop generating tasks.
+
+~~~
+/* File find_factor_omp.c */
+#include <stdio.h>
+#include <stdlib.h>
+
+int main()
+{
+  long N = 4993 * 5393;
+  long f;
+#pragma omp parallel
+#pragma omp single
+  for (f = 2; f <= N; f++) /* Loop generating tasks */
+  {
+    if (f % 200 == 0) /* Print progress */
+    {
+      fprintf(stdout, "%li tasks generated\n", f);
+      fflush(stdout);
+    }
+#pragma omp task
+    { /* Check if f is a factor */
+      if (f % 200 == 0) /* Print progress */
+        fprintf(stdout, "    %li tasks done\n", f);
+      if (N % f == 0)
+      { // The remainder is 0, found factor!
+        fprintf(stdout, "Factor: %li\n", f);
+        exit(0); /* Terminate the program */
+      }
+      else
+        for (int i = 1; i < 4e6; i++)
+          ; /* Burn some CPU cycles */
+    }
+  } 
+}
+~~~
+{:.language-c}
+
+- Run the program in parallel and compare execution time with the serial version.  
+
+~~~
+time srun ./a.out
+time srun -c4 ./a.out
+~~~
+{:.language-bash}
+
+-  How many tasks are in the pool? Not all tasks are generated right away. A scheduler controls the size of the task pool to prevent the overloading of the system. At some point, when the list of deferred tasks is too long, the implementation is allowed to stop generating new tasks, and switches every thread in the team on executing already generated tasks. 
+- Try submitting a job with more threads and look at how many tasks will be generated.
+
+~~~
+time srun -c4 --export OMP_NUM_THREADS=20 ./a.out
+~~~
+{:.language-bash}
 
 ### Task Synchronization
+Some applications require tasks to be executed in a certain order, but it is impossible to know when a task will be executed because a scheduler decides when and where to run a task. Several OpenMP directives are available for task synchronization. 
 
-In general it is impossible to say when a task will be executed. Consider the code:
+For example, consider the code:
 
 ~~~
 x = f();
@@ -107,14 +159,12 @@ x = f();
 { y1 = g1(x); }
 #pragma omp task
 { y2 = g2(x); }
-z = h(y1)+h(y2);
+z = h(y1) + h(y2);
 ~~~
 {:.language-c}
 
-- The code is incorrect, `z = h(y1)+h(y2)` could be executed before y1 and y2 are computed.
-- Wait until tasks are finished: `taskwait` directive.
+When the statement computing z is executed, the tasks computing  *y1* and *y2* have only been scheduled; they have not necessarily been executed yet. To fix this we need to explicitly wait until tasks computing *y1* and *y2* are finished before computing *z*. For this we need to use the *omp taskwait* directive: 
 
-Correct code:
 ~~~
 x = f();
 #pragma omp task
@@ -122,37 +172,62 @@ x = f();
 #pragma omp task
 { y2 = g2(x); }
 #pragma omp taskwait
-z = h(y1)+h(y2);
+z = h(y1) + h(y2);
 ~~~
 {:.language-c}
 
-### Task Dependencies
+This corrected code will generate two tasks and wait for both of them to be finished before computing *z*. 
+
+### Controlling Task Execution Order
+In some cases a task may depend on another task, but not on all generated tasks. The *taskwait* directive in this case is too restrictive. 
 
 Consider the following code:
 ~~~
-#pragma omp task
-x = f()
-#pragma omp task
-y = g(x)
-~~~~
-{:.language-c}
+#pragma omp task /* task A */
+save_data(A);
+#pragma omp task /* task B */
+save_data(B);
 
-The second task can be executed before the first, possibly leading to an incorrect result. This is corrected by specifying task dependency:
+#pragma omp taskwait
 
-~~~
-#pragma omp task depend(out:x)
-x = f()
-#pragma omp task depend(in:x)
-y = g(x)
+#pragma omp task /* task C */
+compute_stats(A);
+#pragma omp task /* task D */
+compute_stats(B);
 ~~~
 {:.language-c}
 
-This example illustrates Read after Write (RaW) dependency: the first task writes x which is then read by the second task.
+In this case *task C* should be executed after *task A*, but it won’t run until the execution of *task B* is finished.
 
-The depend clause enforces additional constraints on the scheduling of tasks or loop iterations. These constraints establish dependences only between sibling tasks or between loop iterations. The task dependence is fulfilled when the predecessor task has completed.
+The *task depend* clause allows you to provide information on the order in which tasks should be executed. However, the best way to understand task dependencies concept is to think of them as of the way to describe how different tasks access data and not in what order they should be executed.
 
+- The *depend* clause is followed by an access mode that can be *in*, *out* or *inout*.
+- *depend(in:x)* - task will read variable *x*
+- *depend(out:y) - task will write variable *y*, previous value of *y* will be ignored.
+- *depend(inout:z) - task will both read and write variable *z*
+- The OpenMP scheduler considers task dependencies and automatically decides whether a task is ready for execution.
 
-> ## Controlling Order of Task Execution
+The previous example rewritten with task dependencies will be:
+~~~
+#pragma omp task depend(out:A) /* task A */
+save_data(A);
+#pragma omp task depend(out:B)/* task B */
+save_data(B);
+
+#pragma omp taskwait
+
+#pragma omp task depend(in:A)/* task C */
+compute_stats(A);
+#pragma omp task depend(in:B)/* task D */
+compute_stats(B);
+~~~
+{:.language-c}
+
+This example illustrates READ after WRITE dependency:  *task A* writes A which is then read by the *task C*.
+
+The depend clause enforces additional constraints on the scheduling of tasks or loop iterations. These constraints establish dependencies only between sibling tasks or between loop iterations. The task dependencies are fulfilled when the predecessor task has completed.
+
+> ## Controlling Order of Data Access
 > Consider the following loop:
 >
 > ~~~
